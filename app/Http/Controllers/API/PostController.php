@@ -5,6 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
@@ -30,7 +32,31 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $fields = $request->validate([
+            'title' => 'required',
+            'description' => 'required',
+            'file' => 'required',
+        ]);
+
+        $file_url = "";
+
+        if($request->hasFile('file')) {
+
+            $file = $request->file('file');
+
+            $file_path = $file->store('public/postFiles');
+            $file_storage_url = Storage::url($file_path);
+            $file_url = url($file_storage_url);
+        }
+
+        $post = Post::create([
+            'title' => $fields['title'],
+            'description' => $fields['description'],
+            'slug' => Str::slug($fields['title'], '-'),
+            'image_url' => $file_url,
+        ]);
+
+        return response($post, 201);
     }
 
     /**
@@ -70,6 +96,9 @@ class PostController extends Controller
      */
     public function destroy($id)
     {
-        //
+        if(!Post::destroy($id)) {
+            return  response(['message' => 'Post not found'], 404);
+        }
+        return  response(['message' => 'Post deleted successfully'], 200);
     }
 }
