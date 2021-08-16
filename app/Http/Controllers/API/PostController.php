@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Post;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -14,7 +15,11 @@ class PostController extends Controller
      */
     public function index()
     {
-        //
+        $posts = Post::all();
+        if(!count($posts)) {
+            return response(['message' => 'Posts not found.'], 404);
+        }
+        return response(Post::all(), 200);
     }
 
     /**
@@ -36,7 +41,13 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        //
+        $post = Post::find($id);
+
+        if(!$post) {
+            return response(['message' => 'Post not found.'], 404);
+        }
+
+        return response($post, 200);
     }
 
     /**
