@@ -37,4 +37,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::post('profile', [AuthController::class, 'profile']);
     Route::post('logout', [AuthController::class, 'logout']);
+
 });
