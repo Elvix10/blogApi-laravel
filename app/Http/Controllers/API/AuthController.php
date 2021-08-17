@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -38,14 +39,20 @@ class AuthController extends Controller
 
     public function login(Request $request){
 
-        if(!Auth::attempt($request->only('email','password'))){
+        $request->validate([
+            'email'=>'required|string',
+            'password'=>'required|string'
+        ]);
 
-            return response()->json([
-                'message' => 'access denied'
-            ], 401);
+        // check email
+
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
         }
-
-        $user = User::where('email', $request['email'])->firstOrFail();
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -57,9 +64,14 @@ class AuthController extends Controller
 
     }
 
+    public function profile(Request $request)
+    {
+        return $request->user();
+    }
+
     public function logout(Request $request)
     {
-        //auth()->user()->tokens()->delete();
-        //return response()->json(['message' => 'User successfully signed out']);
+        auth()->user()->tokens()->delete();
+        return response()->json(['message' => 'User successfully signed out']);
     }
 }
